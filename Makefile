@@ -39,9 +39,9 @@ include $(DEVKITPRO)/libnx/switch_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	JKSysV
 BUILD		:=	build
-SOURCES		:=	src
+SOURCES		:=	source
 DATA		:=	data
-INCLUDES	:=	inc
+INCLUDES	:=	include ./fslib/Switch/FsLib/include
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -53,12 +53,12 @@ CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
 
 CFLAGS	+=	$(INCLUDE) -D__SWITCH__
 
-CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
+CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++23
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lnx
+LIBS	:= ../fslib/Switch/FsLib/lib/libFsLib.a -ljson-c -lminizip -lz -lnx
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -154,14 +154,18 @@ ifneq ($(ROMFS),)
 	export NROFLAGS += --romfsdir=$(CURDIR)/$(ROMFS)
 endif
 
-.PHONY: $(BUILD) clean all
+.PHONY: $(BUILD) fslib clean all
 
 #---------------------------------------------------------------------------------
-all: $(BUILD)
+all: fslib $(BUILD)
 
-$(BUILD):
+$(BUILD): fslib
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+
+#---------------------------------------------------------------------------------
+fslib:
+	$(MAKE) -C fslib/Switch/FsLib
 
 #---------------------------------------------------------------------------------
 clean:
